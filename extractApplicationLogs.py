@@ -2,10 +2,13 @@ import os
 import re
 
 def parse_log_statements(file_path):
+    log_statements = []
     with open(file_path, "r") as f:
-        file_content = f.read()
-        log_statements = re.findall(r"\.(info|warn|error)\((.*)\);", file_content)
-        log_statements = [(file_path, line_number + 1, log_level, log_message) for line_number, log_statement in enumerate(log_statements) for log_level, log_message in [log_statement]]
+        for line_number, line in enumerate(f):
+            match = re.search(r"\.(info|warn|error)\((.*)\);", line)
+            if match:
+                log_level, log_message = match.groups()
+                log_statements.append((file_path, line_number + 1, log_level, log_message))
     return log_statements
 
 def create_report(project_folder, report_file):
@@ -21,10 +24,11 @@ def create_report(project_folder, report_file):
         f.write("<h1>Log Statement Report</h1>")
         f.write("<table border='1'><tr><th>Class</th><th>Line</th><th>Level</th><th>Message</th></tr>")
         for class_name, line_number, log_level, log_message in log_statements:
+            class_name = os.path.splitext(os.path.basename(class_name))[0]
             f.write(f"<tr><td>{class_name}</td><td>{line_number}</td><td>{log_level}</td><td>{log_message}</td></tr>")
         f.write("</table></body></html>")
 
 if __name__ == "__main__":
-    project_folder = "<INPUT_HERE_YOUR_SOURCE_CODE_FOLDER_PATH>"
+    project_folder = "<your project folder here>"
     report_file = "report.html"
     create_report(project_folder, report_file)
